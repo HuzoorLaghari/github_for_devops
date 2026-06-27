@@ -1,0 +1,65 @@
+name: Deploy Full-Stack App to EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  APP_DIR: /opt/visitor-app
+
+jobs:
+  deploy:
+    name: Deploy Frontend + Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Verify connection
+        run: |
+          ssh ec2-user@${{ secrets.EC2_HOST }} "echo 'SSH OK' && uname -a"
+
+      - name: Create app directories
+        run: |
+          ssh ec2-user@${{ secrets.EC2_HOST }} "mkdir -p ${{ env.APP_DIR }}/frontend ${{ env.APP_DIR }}/backend"
+
+      - name: Deploy frontend
+        run: |
+          scp -r app/* ec2-user@${{ secrets.EC2_HOST }}:${{ env.APP_DIR }}/frontend/
+          ssh ec2-user@${{ secrets.EC2_HOST }} "sudo rm -rf /usr/share/nginx/html/app && sudo cp -r ${{ env.APP_DIR }}/frontend /usr/share/nginx/html/app && sudo chown -R nginx:nginx /usr/share/nginx/html/app"
+
+      - name: Deploy backend
+        run: |
+          scp -r backend/* ec2-user@${{ secrets.EC2_HOST }}:${{ env.APP_DIR }}/backend/
+          ssh ec2-user@${{ secrets.EC2_HOST }} "cd ${{ env.APP_DIR }}/backend && npm install --omit=dev"
+
+      - name: Deploy configs
+        run: |
+          scp config/nginx-app.conf ec2-user@${{ secrets.EC2_HOST }}:~/
+          scp config/backend.service ec2-user@${{ secrets.EC2_HOST }}:~/
+
+      - name: Restart services
+        run: |
+          ssh ec2-user@${{ secrets.EC2_HOST }} "sudo cp ~/nginx-app.conf /etc/nginx/conf.d/visitor-app.conf && sudo rm -f /etc/nginx/conf.d/default.conf && sudo systemctl restart nginx"
+          ssh ec2-user@${{ secrets.EC2_HOST }} "sudo cp ~/backend.service /etc/systemd/system/visitor-backend.service && sudo systemctl daemon-reload && sudo systemctl enable visitor-backend && sudo systemctl restart visitor-backend"
+
+      - name: Verify deployment
+        run: |
+          sleep 5
+          FRONTEND=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.EC2_HOST }}/ || echo "000")
+          API=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.EC2_HOST }}/api/health || echo "000")
+          echo "Frontend: $FRONTEND | API: $API"
+          if [ "$FRONTEND" != "200" ] || [ "$API" != "200" ]; then
+            echo "Deployment verification failed"
+            exit 1
+          fi
+          echo "Deployment verified successfully!"
