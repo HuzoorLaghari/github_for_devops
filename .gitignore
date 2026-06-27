@@ -1,0 +1,26 @@
+# Terraform
+terraform/.terraform/
+terraform/terraform.tfstate*
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+
+# Node.js
+backend/node_modules/
+backend/.env
+
+# SSH keys
+*.pem
+*.key
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+node_modules/
+backend/.env
+terraform/terraform.tfvars

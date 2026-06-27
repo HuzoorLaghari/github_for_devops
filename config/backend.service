@@ -1,0 +1,21 @@
+[Unit]
+Description=Visitor App Backend
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/visitor-app/backend
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+Environment=PORT=3000
+Environment=DB_HOST=localhost
+Environment=DB_PORT=5432
+Environment=DB_NAME=visitor_app
+Environment=DB_USER=app_user
+Environment=DB_PASSWORD=app_password
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevOps Full-Stack Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">Full-Stack DevOps</div>
+      <h1>CI/CD Dashboard</h1>
+    </header>
+
+    <div class="cards">
+      <div class="card" id="visit-card">
+        <h2>Visitor Count</h2>
+        <p class="big-number" id="visit-count">--</p>
+        <p class="label">Total visits recorded</p>
+      </div>
+
+      <div class="card">
+        <h2>System Info</h2>
+        <div class="info-list">
+          <div class="info-row"><span>Backend</span><span class="status-ok" id="backend-status">Checking...</span></div>
+          <div class="info-row"><span>Database</span><span class="status-ok" id="db-status">Checking...</span></div>
+          <div class="info-row"><span>Server</span><span id="server-time">--</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card guestbook-card">
+      <h2>Guestbook</h2>
+      <form id="message-form">
+        <input type="text" id="name-input" placeholder="Your name" required>
+        <textarea id="message-input" placeholder="Leave a message..." required></textarea>
+        <button type="submit">Submit</button>
+      </form>
+      <div id="messages-container">
+        <p class="empty-state" id="empty-state">No messages yet. Be the first!</p>
+        <div id="messages-list"></div>
+      </div>
+    </div>
+
+    <footer>
+      <p>Provisioned via <strong>Terraform</strong> &middot; Deployed via <strong>GitHub Actions</strong></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
